@@ -2,15 +2,12 @@ import { Search } from "@/components/people/search"
 import { PeopleTable } from "@/components/people/table"
 import { Loader2 } from "lucide-react"
 import { Suspense } from "react"
+import { SearchParams } from "./_types"
 
 export default async function Home(props: {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>
 }) {
-  const searchParams = await props.searchParams
-  const currentPage = Number(searchParams.page) || 1
-  const currentSearch = searchParams.search
-    ? String(searchParams.search)
-    : undefined
+  const searchParams = SearchParams.parse(await props.searchParams)
 
   return (
     <div className="container mx-auto p-4">
@@ -22,7 +19,12 @@ export default async function Home(props: {
           </div>
         }
       >
-        <PeopleTable page={currentPage} search={currentSearch} />
+        <PeopleTable
+          page={searchParams.page}
+          search={searchParams.search}
+          gender={searchParams.gender}
+          hairColor={searchParams.hair_color}
+        />
       </Suspense>
     </div>
   )
