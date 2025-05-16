@@ -57,7 +57,11 @@ export const FilterColumn: React.FC<FilterColumnProps> = ({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="sm">
+        <Button
+          variant="ghost"
+          size="sm"
+          className="transition-colors ease-in duration-200"
+        >
           <Funnel
             className={cn({ "fill-amber-400": selectedOptions.length > 0 })}
           />

@@ -15,6 +15,7 @@ import { MessageBox } from "../message-box"
 import { FilterColumn } from "./filter-column"
 import { Pagination } from "./pagination"
 import { usePeople } from "./utils/hooks"
+import { Search } from "./search"
 
 const columns: PeopleTableWrapperProps["cols"] = {
   photo: { name: "Photo", className: "w-16" },
@@ -62,6 +63,7 @@ export const PeopleTable: React.FC<PeopleTableProps> = ({ people }) => {
 
   return (
     <>
+      <Search placeholder="Search people..." />
       <PeopleTableWrapper cols={extendedColumns}>
         {peoplePage.length === 0 && (
           <TableRow>

@@ -64,7 +64,7 @@ const NavButton: React.FC<{
     <Link
       href={href}
       className={cn(
-        `px-1 py-1 bg-amber-400 text-white rounded hover:bg-slate-600`,
+        `px-1 py-1 bg-amber-400 text-white rounded hover:bg-slate-600 transition-colors ease-in duration-200`,
         {
           "cursor-default bg-slate-300 hover:bg-slate-300": disabled,
         },

@@ -1,7 +1,8 @@
 import { MessageBox } from "@/components/message-box"
-import { Search } from "@/components/people/search"
 import { PeopleTable } from "@/components/people/table"
 import { fetchSwapiAllPages } from "@/lib/swapi/fetch"
+import { Loader2 } from "lucide-react"
+import { Suspense } from "react"
 export default async function Home() {
   const response = await fetchSwapiAllPages("/people")
 
@@ -19,8 +20,15 @@ export default async function Home() {
 
   return (
     <div className="container mx-auto p-4">
-      <Search placeholder="Search people..." />
-      <PeopleTable people={people} />
+      <Suspense
+        fallback={
+          <div className="flex justify-center">
+            <Loader2 className=" my-20 h-15 w-15 animate-spin inline" />
+          </div>
+        }
+      >
+        <PeopleTable people={people} />
+      </Suspense>
     </div>
   )
 }
