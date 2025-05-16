@@ -2,7 +2,7 @@ import * as SwapiSchema from "@/generated/swapiSchema"
 import schemasConfig from "@/swapi/schemas-config"
 import { z } from "zod"
 
-export const swapiPageSchema = <T extends z.ZodObject<z.ZodRawShape>>(
+export const createSwapiPageSchema = <T extends z.ZodObject<z.ZodRawShape>>(
   results: z.ZodArray<T>,
 ) =>
   z.discriminatedUnion("status", [
@@ -37,7 +37,7 @@ export const swapiPageSchema = <T extends z.ZodObject<z.ZodRawShape>>(
   ])
 
 export type SwapiPageSchema<T extends z.ZodObject<z.ZodRawShape>> = z.infer<
-  ReturnType<typeof swapiPageSchema<T>>
+  ReturnType<typeof createSwapiPageSchema<T>>
 >
 export type SchemaMapByUrl = {
   [K in (typeof schemasConfig)[number] as Lowercase<
@@ -47,3 +47,7 @@ export type SchemaMapByUrl = {
 export type SwapiPageResponse<T extends keyof SchemaMapByUrl> = SwapiPageSchema<
   SchemaMapByUrl[T]
 >
+export type FetchSwapiConfig = {
+  page: number
+  search?: string
+}
