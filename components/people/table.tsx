@@ -8,19 +8,23 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { fetchSwapi } from "@/lib/swapi/fetch"
+import { MessageBox } from "../message-box"
 import { Pagination } from "./pagination"
-import { Alert, AlertDescription, AlertTitle } from "../ui/alert"
-import { AlertCircle } from "lucide-react"
 
 const ITEMS_PER_PAGE = 10
 
 interface PeopleTableProps {
   page: number
+  search?: string
 }
 
-export const PeopleTable: React.FC<PeopleTableProps> = async ({ page }) => {
+export const PeopleTable: React.FC<PeopleTableProps> = async ({
+  page,
+  search,
+}) => {
   const response = await fetchSwapi("/people", {
     page,
+    search,
   })
 
   if (response.status === "failure") {
@@ -28,11 +32,11 @@ export const PeopleTable: React.FC<PeopleTableProps> = async ({ page }) => {
       <PeopleTableWrapper>
         <TableRow>
           <TableCell colSpan={4}>
-            <Alert variant="destructive">
-              <AlertCircle className="h-4 w-4" />
-              <AlertTitle>{response.error.status}</AlertTitle>
-              <AlertDescription>{response.error.message}</AlertDescription>
-            </Alert>
+            <MessageBox
+              title={response.error.status.toString()}
+              message={response.error.message}
+              type="error"
+            />
           </TableCell>
         </TableRow>
       </PeopleTableWrapper>
@@ -41,6 +45,22 @@ export const PeopleTable: React.FC<PeopleTableProps> = async ({ page }) => {
 
   const { count, results: people } = response.data
   const totalPages = Math.ceil(count / ITEMS_PER_PAGE)
+
+  if (people.length === 0) {
+    return (
+      <PeopleTableWrapper>
+        <TableRow>
+          <TableCell colSpan={4}>
+            <MessageBox
+              title="No results found"
+              message="No people found matching your search criteria."
+              type="info"
+            />
+          </TableCell>
+        </TableRow>
+      </PeopleTableWrapper>
+    )
+  }
 
   return (
     <>
