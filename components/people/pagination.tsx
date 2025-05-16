@@ -1,29 +1,14 @@
 "use client"
 
-import { TransLink } from "@/components/trans-link"
+import { cn } from "@/lib/utils"
 import {
   ChevronFirst,
   ChevronLast,
   ChevronLeft,
   ChevronRight,
 } from "lucide-react"
+import Link from "next/link"
 import { usePathname, useSearchParams } from "next/navigation"
-
-const NavButton: React.FC<{
-  children: React.ReactNode
-  href: string
-  disabled?: boolean
-}> = ({ children, href, disabled }) => {
-  return (
-    <TransLink
-      href={href}
-      className="px-1 py-1 bg-amber-400 text-white rounded hover:bg-slate-600"
-      disabled={disabled}
-    >
-      {children}
-    </TransLink>
-  )
-}
 
 export const Pagination: React.FC<{ totalPages: number }> = ({
   totalPages,
@@ -67,5 +52,30 @@ export const Pagination: React.FC<{ totalPages: number }> = ({
         </NavButton>
       </div>
     </div>
+  )
+}
+
+const NavButton: React.FC<{
+  children: React.ReactNode
+  href: string
+  disabled?: boolean
+}> = ({ children, href, disabled }) => {
+  return (
+    <Link
+      href={href}
+      className={cn(
+        `px-1 py-1 bg-amber-400 text-white rounded hover:bg-slate-600`,
+        {
+          "cursor-default bg-slate-300 hover:bg-slate-300": disabled,
+        },
+      )}
+      onClick={(event) => {
+        if (disabled) {
+          event.preventDefault()
+        }
+      }}
+    >
+      {children}
+    </Link>
   )
 }

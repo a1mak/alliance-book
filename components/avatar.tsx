@@ -18,7 +18,7 @@ export const Avatar: React.FC<AvatarProps> = ({
       className={cn("rounded-full object-cover w-10 h-10", className)}
       width={40}
       height={40}
-      src={`${process.env.SWAPI_GALLERY_URL}static/assets/img/people/${personId}.jpg`}
+      src={`https://vieraboschkova.github.io/swapi-gallery/static/assets/img/people/${personId}.jpg`}
       {...propsRest}
     />
   )

@@ -1,3 +1,5 @@
+"use client"
+
 import { Avatar } from "@/components/avatar"
 import {
   Table,
@@ -7,13 +9,13 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { fetchSwapiAllPages } from "@/lib/swapi/fetch"
+import { Person } from "@/generated/swapiSchema"
+import React, { useMemo } from "react"
 import { MessageBox } from "../message-box"
 import { FilterColumn } from "./filter-column"
 import { Pagination } from "./pagination"
-import React from "react"
+import { usePeople } from "./utils/hooks"
 
-const ITEMS_PER_PAGE = 10
 const columns: PeopleTableWrapperProps["cols"] = {
   photo: { name: "Photo", className: "w-16" },
   name: { name: "Name" },
@@ -29,91 +31,49 @@ const columns: PeopleTableWrapperProps["cols"] = {
 }
 
 interface PeopleTableProps {
-  page: number
-  search?: string
-  gender?: string | string[]
-  hairColor?: string | string[]
+  people: Person[]
 }
 
-export const PeopleTable: React.FC<PeopleTableProps> = async ({
-  page,
-  search,
-  gender,
-  hairColor,
-}) => {
-  const response = await fetchSwapiAllPages("/people")
+export const PeopleTable: React.FC<PeopleTableProps> = ({ people }) => {
+  const { peoplePage, totalPages } = usePeople(people)
 
-  const renderTableMessage = (children: React.ReactNode) => (
-    <PeopleTableWrapper cols={columns}>
-      <TableRow>
-        <TableCell colSpan={5}>{children}</TableCell>
-      </TableRow>
-    </PeopleTableWrapper>
+  const extendedColumns = useMemo(
+    () => ({
+      ...columns,
+      hair_color: {
+        ...columns.hair_color,
+        filter: {
+          values: Array.from(
+            new Set(
+              people.map((person) => person.hair_color.split(", ")).flat(),
+            ),
+          ),
+        },
+      },
+      gender: {
+        ...columns.gender,
+        filter: {
+          values: Array.from(new Set(people.map((person) => person.gender))),
+        },
+      },
+    }),
+    [people],
   )
-
-  if (response.status === "failure") {
-    return renderTableMessage(
-      <MessageBox
-        title={response.error.status.toString()}
-        message={response.error.message}
-        type="error"
-      />,
-    )
-  }
-
-  const { results: people } = response.data
-  const filteredPeople = people
-    .filter((person) => {
-      if (search) {
-        return person.name.toLowerCase().includes(search.toLowerCase())
-      }
-      return true
-    })
-    .filter((person) => {
-      if (gender) {
-        return Array.isArray(gender)
-          ? gender.includes(person.gender)
-          : person.gender === gender
-      }
-
-      return true
-    })
-    .filter((person) => {
-      const personHairColor = person.hair_color.split(", ")
-      if (Array.isArray(hairColor) && hairColor.length > 0) {
-        return hairColor.some((color) => personHairColor.includes(color))
-      }
-      if (typeof hairColor === "string") {
-        return personHairColor.includes(hairColor)
-      }
-      return true
-    })
-  const peoplePage = filteredPeople.slice(
-    (page - 1) * ITEMS_PER_PAGE,
-    page * ITEMS_PER_PAGE,
-  )
-  const genders = Array.from(new Set(people.map((person) => person.gender)))
-  const hairColors = Array.from(
-    new Set(people.map((person) => person.hair_color.split(", ")).flat()),
-  )
-  const totalPages = Math.ceil(filteredPeople.length / ITEMS_PER_PAGE)
-
-  columns.hair_color.filter = { values: hairColors }
-  columns.gender.filter = { values: genders }
-
-  if (filteredPeople.length === 0) {
-    return renderTableMessage(
-      <MessageBox
-        title="No results found"
-        message="No people found matching your search criteria."
-        type="info"
-      />,
-    )
-  }
 
   return (
     <>
-      <PeopleTableWrapper cols={columns}>
+      <PeopleTableWrapper cols={extendedColumns}>
+        {peoplePage.length === 0 && (
+          <TableRow>
+            <TableCell colSpan={5}>
+              <MessageBox
+                title="No results found"
+                message="No people found matching your search criteria."
+                type="info"
+              />
+            </TableCell>
+          </TableRow>
+        )}
         {peoplePage.map((person) => (
           <TableRow key={person.name}>
             <TableCell>
