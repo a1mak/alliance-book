@@ -10,8 +10,8 @@ import {
 import { cn } from "@/lib/utils"
 import { DropdownMenuCheckboxItemProps } from "@radix-ui/react-dropdown-menu"
 import { Funnel } from "lucide-react"
-import { usePathname, useRouter, useSearchParams } from "next/navigation"
-import { useMemo } from "react"
+import { useCallback, useMemo } from "react"
+import { useUrlParams } from "./utils/use-url-params"
 
 type Checked = DropdownMenuCheckboxItemProps["checked"]
 
@@ -26,33 +26,30 @@ export const FilterColumn: React.FC<FilterColumnProps> = ({
   paramName,
   options,
 }) => {
-  const searchParams = useSearchParams()
-  const pathname = usePathname()
-  const { replace } = useRouter()
+  const { params, pushParams } = useUrlParams()
 
-  const handleFilter = (option: string, checked: Checked) => {
-    const params = new URLSearchParams(searchParams)
+  const handleFilter = useCallback(
+    (option: string, checked: Checked) => {
+      if (checked) {
+        params.append(paramName, option)
+      } else {
+        const values = params.getAll(paramName)
+        params.delete(paramName)
+        values.forEach((value) => {
+          if (value !== option) {
+            params.append(paramName, value)
+          }
+        })
+      }
+      params.set("page", "1")
+      pushParams({ scroll: false })
+    },
+    [paramName, params, pushParams],
+  )
 
-    params.set("page", "1")
-
-    if (checked) {
-      params.append(paramName, option)
-    } else {
-      const currentGender = params.getAll(paramName)
-      params.delete(paramName)
-      currentGender.forEach((item) => {
-        if (item !== option) {
-          params.append(paramName, item)
-        }
-      })
-    }
-
-    replace(`${pathname}?${params.toString()}`)
-  }
   const selectedOptions = useMemo(() => {
-    const selected = searchParams.getAll(paramName)
-    return selected.length > 0 ? selected : []
-  }, [paramName, searchParams])
+    return params.getAll(paramName)
+  }, [params, paramName])
 
   return (
     <DropdownMenu>

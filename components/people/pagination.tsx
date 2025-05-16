@@ -1,27 +1,28 @@
 "use client"
 
-import { cn } from "@/lib/utils"
+import { Button } from "@/components/ui/button"
 import {
   ChevronFirst,
   ChevronLast,
   ChevronLeft,
   ChevronRight,
 } from "lucide-react"
-import Link from "next/link"
-import { usePathname, useSearchParams } from "next/navigation"
+import { useUrlParams } from "./utils/use-url-params"
+import { useCallback } from "react"
 
 export const Pagination: React.FC<{ totalPages: number }> = ({
   totalPages,
 }) => {
-  const searchParams = useSearchParams()
-  const pathname = usePathname()
-  const currentPage = Number(searchParams.get("page")) || 1
+  const { params, pushParams } = useUrlParams()
+  const currentPage = Number(params.get("page")) || 1
 
-  const constructPageUrl = (page: number) => {
-    const params = new URLSearchParams(searchParams)
-    params.set("page", String(page))
-    return `${pathname}?${params.toString()}`
-  }
+  const handlePageChange = useCallback(
+    (page: number) => {
+      params.set("page", String(page))
+      pushParams({ scroll: false })
+    },
+    [params, pushParams],
+  )
 
   return (
     <div className="flex items-center justify-between mt-4 gap-1">
@@ -29,23 +30,26 @@ export const Pagination: React.FC<{ totalPages: number }> = ({
         Page {currentPage} of {totalPages}
       </span>
       <div className="flex items-center gap-1">
-        <NavButton href={constructPageUrl(1)} disabled={currentPage === 1}>
+        <NavButton
+          onClick={() => handlePageChange(1)}
+          disabled={currentPage === 1}
+        >
           <ChevronFirst />
         </NavButton>
         <NavButton
-          href={constructPageUrl(currentPage - 1)}
+          onClick={() => handlePageChange(currentPage - 1)}
           disabled={currentPage === 1}
         >
           <ChevronLeft />
         </NavButton>
         <NavButton
-          href={constructPageUrl(currentPage + 1)}
+          onClick={() => handlePageChange(currentPage + 1)}
           disabled={currentPage === totalPages}
         >
           <ChevronRight />
         </NavButton>
         <NavButton
-          href={constructPageUrl(totalPages)}
+          onClick={() => handlePageChange(totalPages)}
           disabled={currentPage === totalPages}
         >
           <ChevronLast />
@@ -57,25 +61,18 @@ export const Pagination: React.FC<{ totalPages: number }> = ({
 
 const NavButton: React.FC<{
   children: React.ReactNode
-  href: string
+  onClick: () => void
   disabled?: boolean
-}> = ({ children, href, disabled }) => {
+}> = ({ children, onClick, disabled }) => {
   return (
-    <Link
-      href={href}
-      className={cn(
-        `px-1 py-1 bg-amber-400 text-white rounded hover:bg-slate-600 transition-colors ease-in duration-200`,
-        {
-          "cursor-default bg-slate-300 hover:bg-slate-300": disabled,
-        },
-      )}
-      onClick={(event) => {
-        if (disabled) {
-          event.preventDefault()
-        }
-      }}
+    <Button
+      variant="default"
+      size="icon"
+      onClick={onClick}
+      disabled={disabled}
+      className="bg-amber-400 hover:bg-slate-600 disabled:bg-slate-300 disabled:hover:bg-slate-300"
     >
       {children}
-    </Link>
+    </Button>
   )
 }

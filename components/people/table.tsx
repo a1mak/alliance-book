@@ -16,12 +16,15 @@ import { FilterColumn } from "./filter-column"
 import { Pagination } from "./pagination"
 import { PersonDetailsDialog } from "./person-details-dialog"
 import { Search } from "./search"
-import { usePeople } from "./utils/hooks"
+import { useFilters } from "./utils/use-filters"
 
 const columns: PeopleTableWrapperProps["cols"] = {
   photo: { name: "Photo", className: "w-16" },
   name: { name: "Name" },
-  birth_year: { name: "Birth Year", className: "w-1/8" },
+  birth_year: { 
+    name: "Birth Year", 
+    className: "w-1/8 hidden md:table-cell" 
+  },
   hair_color: {
     name: "Hair Color",
     className: "w-1/8",
@@ -37,7 +40,7 @@ interface PeopleTableProps {
 }
 
 export const PeopleTable: React.FC<PeopleTableProps> = ({ people }) => {
-  const { peoplePage, totalPages } = usePeople(people)
+  const { itemsPage: peoplePage, totalPages } = useFilters(people)
   const [selectedPerson, setSelectedPerson] = useState<Person | null>(null)
 
   const extendedColumns = useMemo(
@@ -98,7 +101,7 @@ export const PeopleTable: React.FC<PeopleTableProps> = ({ people }) => {
               />
             </TableCell>
             <TableCell className="font-bold">{person.name}</TableCell>
-            <TableCell>{person.birth_year}</TableCell>
+            <TableCell className="hidden md:table-cell">{person.birth_year}</TableCell>
             <TableCell className="px-4">{person.hair_color}</TableCell>
             <TableCell className="px-4">{person.gender}</TableCell>
           </TableRow>

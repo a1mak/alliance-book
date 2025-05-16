@@ -1,28 +1,22 @@
 "use client"
 
 import { Input } from "@/components/ui/input"
-import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { useDebouncedCallback } from "use-debounce"
+import { useUrlParams } from "./utils/use-url-params"
 
 export const Search: React.FC<{ placeholder?: string }> = ({ placeholder }) => {
-  const searchParams = useSearchParams()
-  const pathname = usePathname()
-  const { replace } = useRouter()
+  const { params, pushParams } = useUrlParams()
 
   const handleSearch = useDebouncedCallback(
     (event: React.ChangeEvent<HTMLInputElement>) => {
       const query = event.target.value
-      const params = new URLSearchParams(searchParams)
-
-      params.set("page", "1")
-
       if (query) {
         params.set("search", query)
       } else {
         params.delete("search")
       }
-
-      replace(`${pathname}?${params.toString()}`)
+      params.set("page", "1")
+      pushParams()
     },
     300,
   )
@@ -33,7 +27,7 @@ export const Search: React.FC<{ placeholder?: string }> = ({ placeholder }) => {
         type="text"
         placeholder={placeholder}
         onChange={handleSearch}
-        defaultValue={searchParams.get("search") ?? undefined}
+        defaultValue={params.get("search") ?? undefined}
       />
     </div>
   )
