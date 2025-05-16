@@ -10,12 +10,13 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { Person } from "@/generated/swapiSchema"
-import React, { useMemo } from "react"
+import React, { useMemo, useState } from "react"
 import { MessageBox } from "../message-box"
 import { FilterColumn } from "./filter-column"
 import { Pagination } from "./pagination"
-import { usePeople } from "./utils/hooks"
+import { PersonDetailsDialog } from "./person-details-dialog"
 import { Search } from "./search"
+import { usePeople } from "./utils/hooks"
 
 const columns: PeopleTableWrapperProps["cols"] = {
   photo: { name: "Photo", className: "w-16" },
@@ -37,6 +38,7 @@ interface PeopleTableProps {
 
 export const PeopleTable: React.FC<PeopleTableProps> = ({ people }) => {
   const { peoplePage, totalPages } = usePeople(people)
+  const [selectedPerson, setSelectedPerson] = useState<Person | null>(null)
 
   const extendedColumns = useMemo(
     () => ({
@@ -77,7 +79,18 @@ export const PeopleTable: React.FC<PeopleTableProps> = ({ people }) => {
           </TableRow>
         )}
         {peoplePage.map((person) => (
-          <TableRow key={person.name}>
+          <TableRow
+            key={person.name}
+            className="animate-in slide-in-from-bottom-5 fade-in duration-300 cursor-pointer hover:bg-slate-100 focus:outline-none focus:bg-slate-100"
+            onClick={() => setSelectedPerson(person)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault()
+                setSelectedPerson(person)
+              }
+            }}
+            tabIndex={0}
+          >
             <TableCell>
               <Avatar
                 personId={person.url.split("/").slice(-2, -1)[0]}
@@ -92,6 +105,11 @@ export const PeopleTable: React.FC<PeopleTableProps> = ({ people }) => {
         ))}
       </PeopleTableWrapper>
       <Pagination totalPages={totalPages} />
+      <PersonDetailsDialog
+        person={selectedPerson}
+        isOpen={!!selectedPerson}
+        onClose={() => setSelectedPerson(null)}
+      />
     </>
   )
 }
