@@ -1,7 +1,11 @@
-import type { NextConfig } from "next";
+import type { NextConfig } from "next"
 
 const nextConfig: NextConfig = {
-  /* config options here */
-};
+  images: {
+    remotePatterns: [
+      new URL(`${process.env.SWAPI_GALLERY_URL}static/assets/img/**`),
+    ],
+  },
+}
 
-export default nextConfig;
+export default nextConfig
