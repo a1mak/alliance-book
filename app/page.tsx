@@ -1,18 +1,16 @@
-import { fetchSwapi } from "@/lib/swapi/fetch"
+import { PeopleTable } from "@/components/people/table"
+import { Suspense } from "react"
 
-export default async function Home() {
-  const { results: people, count } = await fetchSwapi("/people", {
-    page: 1,
-  })
+export default async function Home(props: {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>
+}) {
+  const currentPage = Number((await props.searchParams).page) || 1
 
   return (
     <div>
-      {count} people found
-      {people.map((person) => (
-        <div key={person.name} className="flex items-center gap-4">
-          <span>{person.name}</span>
-        </div>
-      ))}
+      <Suspense fallback={<div>Loading...</div>}>
+        <PeopleTable page={currentPage} />
+      </Suspense>
     </div>
   )
 }

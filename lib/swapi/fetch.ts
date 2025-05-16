@@ -18,18 +18,25 @@ export const fetchSwapi = async <T extends keyof SchemaMapByUrl>(
         `${process.env.SWAPI_URL}${resource}?page=${page}`,
       )
 
+      const name = schemasConfig.find((s) => s.url === resource)!.name
+      const schema = SwapiSchema[`${name}Schema`]
+
       if (!response.ok) {
-        throw new Error(`Failed to fetch resource: ${resource}`)
+        return swapiPageSchema(z.array(schema)).parse({
+          status: "failure",
+          error: {
+            message: `Failed to fetch resource: ${resource}`,
+            status: response.status,
+          },
+        }) as SwapiPageResponse<T>
       }
 
       const data = await response.json()
 
-      const name = schemasConfig.find((s) => s.url === resource)!.name
-      const schema = SwapiSchema[`${name}Schema`]
-
-      return swapiPageSchema(z.array(schema)).parse(
+      return swapiPageSchema(z.array(schema)).parse({
+        status: "success",
         data,
-      ) as SwapiPageResponse<T>
+      }) as SwapiPageResponse<T>
     },
     [resource, page.toString()],
     {
