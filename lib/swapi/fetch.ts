@@ -11,14 +11,33 @@ import {
   createSwapiPageSchema,
 } from "./types"
 
-const revalidationTime = 3600
+const revalidationTime = 1
+
+const catchError = <T>(
+  promise: Promise<T>,
+): Promise<
+  | { success: true; data: T; error?: never }
+  | { success: false; data?: never; error: Error }
+> => {
+  return promise.then(
+    (data) => ({ success: true, data }),
+    (error) => ({ success: false, error }),
+  )
+}
 
 export const fetchSwapi = async <T extends keyof SchemaMapByUrl>(
   resource: T,
   { page, search }: FetchSwapiConfig,
 ) =>
   unstable_cache(
-    async (resource: T) => {
+    async (resource: T): Promise<SwapiPageResponse<T>> => {
+      const createError = (status: number = 500): SwapiPageResponse<T> => ({
+        status: "failure",
+        error: {
+          message: `Failed to fetch resource: ${resource}`,
+          status,
+        },
+      })
       const searchParams = new URLSearchParams([["page", page.toString()]])
 
       if (search) {
@@ -28,28 +47,54 @@ export const fetchSwapi = async <T extends keyof SchemaMapByUrl>(
       const url = new URL(`${process.env.SWAPI_URL}${resource}`)
       url.search = searchParams.toString()
 
-      const response = await fetch(url)
+      const {
+        success: fetchSuccess,
+        error: fetchError,
+        data: response,
+      } = await catchError(fetch(url))
+
+      if (!fetchSuccess) {
+        console.error("Failed to fetch resource", fetchError)
+        return createError(500)
+      }
 
       const name = schemasConfig.find((s) => s.url === resource)!.name
       const schema = SwapiSchema[`${name}Schema`]
       const swapiPageSchema = createSwapiPageSchema(z.array(schema))
 
       if (!response.ok) {
-        return swapiPageSchema.parse({
-          status: "failure",
-          error: {
-            message: `Failed to fetch resource: ${resource}`,
-            status: response.status,
-          },
-        }) as SwapiPageResponse<T>
+        console.error(
+          `Failed to fetch resource: ${resource}\n ${response.status} : ${response.statusText}`,
+        )
+        return createError(response.status)
       }
 
-      const data = await response.json()
+      const {
+        success: jsonSuccess,
+        error: jsonError,
+        data: jsonData,
+      } = await catchError(response.json())
 
-      return swapiPageSchema.parse({
+      if (!jsonSuccess) {
+        console.error("Failed to parse response", jsonError)
+        return createError(500)
+      }
+
+      const {
+        error: parseError,
+        data: parsedData,
+        success: parseSuccess,
+      } = swapiPageSchema.safeParse(jsonData)
+
+      if (!parseSuccess) {
+        console.error("Failed to validate response", parseError)
+        return createError(500)
+      }
+
+      return {
         status: "success",
-        data,
-      }) as SwapiPageResponse<T>
+        data: parsedData,
+      }
     },
     [resource, page.toString(), search ?? ""],
     {

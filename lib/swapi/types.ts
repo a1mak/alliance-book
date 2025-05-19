@@ -5,36 +5,20 @@ import { z } from "zod"
 export const createSwapiPageSchema = <T extends z.ZodObject<z.ZodRawShape>>(
   results: z.ZodArray<T>,
 ) =>
-  z.discriminatedUnion("status", [
-    z.object({
-      status: z.literal("success"),
-      data: z
-        .object({
-          count: z.number(),
-          next: z
-            .string()
-            .url()
-            .startsWith(process.env.SWAPI_URL ?? "")
-            .nullable(),
-          previous: z
-            .string()
-            .url()
-            .startsWith(process.env.SWAPI_URL ?? "")
-            .nullable(),
-          results,
-        })
-        .describe("A page of results from the SWAPI API."),
-    }),
-    z.object({
-      status: z.literal("failure"),
-      error: z
-        .object({
-          message: z.string(),
-          status: z.number(),
-        })
-        .describe("An error object from the SWAPI API."),
-    }),
-  ])
+  z.object({
+    count: z.number(),
+    next: z
+      .string()
+      .url()
+      .startsWith(process.env.SWAPI_URL ?? "")
+      .nullable(),
+    previous: z
+      .string()
+      .url()
+      .startsWith(process.env.SWAPI_URL ?? "")
+      .nullable(),
+    results,
+  })
 
 export type SwapiPageSchema<T extends z.ZodObject<z.ZodRawShape>> = z.infer<
   ReturnType<typeof createSwapiPageSchema<T>>
@@ -44,9 +28,18 @@ export type SchemaMapByUrl = {
     K["url"]
   >]: (typeof SwapiSchema)[`${K["name"]}Schema`]
 }
-export type SwapiPageResponse<T extends keyof SchemaMapByUrl> = SwapiPageSchema<
-  SchemaMapByUrl[T]
->
+export type SwapiPageResponse<T extends keyof SchemaMapByUrl> =
+  | {
+      status: "success"
+      data: SwapiPageSchema<SchemaMapByUrl[T]>
+    }
+  | {
+      status: "failure"
+      error: {
+        message: string
+        status: number
+      }
+    }
 export type FetchSwapiConfig = {
   page: number
   search?: string
